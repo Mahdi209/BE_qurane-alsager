@@ -1,0 +1,41 @@
+{
+  "name": "quranalsager",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon src/server.js",
+    "start": "pm2 start src/server.js --name quranalsager",
+    "stop": "pm2 stop src/server.js --name quranalsager",
+    "restart": "pm2 restart src/server.js --name quranalsager",
+    "reload": "pm2 reload src/server.js --name quranalsager",
+    "delete": "pm2 delete src/server.js --name quranalsager",
+    "logs": "pm2 logs",
+    "monitor": "pm2 monit",
+    "status": "pm2 status"
+  },
+  "keywords": [],
+  "author": "Mohammed Mahdi",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "bcryptjs": "^3.0.2",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "helmet": "^8.1.0",
+    "joi": "^17.13.3",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.15.2",
+    "morgan": "^1.10.0",
+    "multer": "^2.0.1",
+    "nodemailer": "^7.0.4",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}
