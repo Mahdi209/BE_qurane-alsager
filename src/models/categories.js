@@ -20,7 +20,7 @@ const categorySchema = new mongoose.Schema(
   },
     {
     timestamps: true,
-        VersionKey: false,
+        versionKey: false,
     }
 );
 

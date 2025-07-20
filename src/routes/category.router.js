@@ -10,6 +10,8 @@ const {
 } = require('../middleware/rolePermissions');
 
 router.get('/mobile', categoryController.getCategoriesForMobile);
+router.get('/App', categoryController.getCategoriesForApp);
+router.get('/Platform', categoryController.getCategoriesForPlatform);
 
 router.use(verifyToken);
 

@@ -144,6 +144,28 @@ const categoryController = {
             return sendResponse(res, null, err.message, 500);
         }
     },
+    getCategoriesForApp: async (req, res) => {
+        try {
+            const categories = await Category.find(
+                { is_deleted: false , app: true},
+                'name description'
+            );
+            return sendResponse(res, categories, null, 200);
+        } catch (err) {
+            return sendResponse(res, null, err.message, 500);
+        }
+    },
+    getCategoriesForPlatform: async (req, res) => {
+        try {
+            const categories = await Category.find(
+                { is_deleted: false,platform: true},
+                'name description'
+            );
+            return sendResponse(res, categories, null, 200);
+        } catch (err) {
+            return sendResponse(res, null, err.message, 500);
+        }
+    },
 
     restore: async (req, res) => {
         try {

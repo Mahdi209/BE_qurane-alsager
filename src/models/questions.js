@@ -50,7 +50,7 @@ const questionSchema = new mongoose.Schema(
   },
     {
         timestamps: true,
-        VersionKey: false,
+        versionKey: false,
     }
 );
 

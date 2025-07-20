@@ -12,7 +12,7 @@ const deletionRoutes = require('./deletion.router');
 const searchRoutes = require('./search.router');
 const contact = require('./contactUS.router');
 const versionRouter = require("./version.router");
-
+const appLinkRoutes = require("./appLink.router");
 
 router.use('/roles', roleRoutes);
 router.use('/admin', adminRoutes);
@@ -26,6 +26,8 @@ router.use('/deletions', deletionRoutes)
 router.use('/search', searchRoutes);
 router.use('/contact', contact);
 router.use('/version', versionRouter);
+router.use('/appLink', appLinkRoutes);
+
 
 
 

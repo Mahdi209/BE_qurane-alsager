@@ -40,151 +40,7 @@
         }
       }
     },
-    "/api/roles": {
-      "post": {
-        "tags": ["Roles"],
-        "summary": "Create a new role",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RoleInput"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Role created successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RoleResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Role already exists"
-          },
-          "500": {
-            "description": "Server error"
-          }
-        }
-      },
-      "get": {
-        "tags": ["Roles"],
-        "summary": "Get all roles",
-        "responses": {
-          "200": {
-            "description": "List of roles",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/RoleResponse"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/roles/{id}": {
-      "get": {
-        "tags": ["Roles"],
-        "summary": "Get role by ID",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Role found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RoleResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Role not found"
-          }
-        }
-      },
-      "put": {
-        "tags": ["Roles"],
-        "summary": "Update role",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RoleInput"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Role updated successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RoleResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Role not found"
-          }
-        }
-      },
-      "delete": {
-        "tags": ["Roles"],
-        "summary": "Delete role",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Role deleted successfully"
-          },
-          "404": {
-            "description": "Role not found"
-          }
-        }
-      }
-    },
+
     "/api/admin/signup": {
       "post": {
         "tags": ["Admin"],
@@ -1384,26 +1240,91 @@
         }
       }
     },
-    "/api/categories/mobile": {
+
+    "/api/categories/Platform": {
       "get": {
         "tags": ["Categories"],
-        "summary": "Get categories for mobile app (limited fields)",
+        "summary": "Get categories for platform",
+        "description": "Get all active categories that are enabled for the platform",
         "responses": {
           "200": {
-            "description": "List of categories for mobile",
+            "description": "List of categories for platform",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/CategoryMobile"
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/CategoryMobile"
+                      }
+                    },
+                    "error": {
+                      "type": "null"
+                    }
                   }
                 }
               }
             }
           },
           "500": {
-            "description": "Server error"
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/categories/App": {
+      "get": {
+        "tags": ["Categories"],
+        "summary": "Get categories for app",
+        "description": "Get all active categories that are enabled for the app",
+        "responses": {
+          "200": {
+            "description": "List of categories for app",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/CategoryMobile"
+                      }
+                    },
+                    "error": {
+                      "type": "null"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -3108,15 +3029,15 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["name", "age", "message"],
+                "required": ["name", "number", "message"],
                 "properties": {
                   "name": {
                     "type": "string",
                     "description": "Name of the person"
                   },
-                  "age": {
-                    "type": "number",
-                    "description": "Age of the person"
+                  "number": {
+                    "type": "string",
+                    "description": "number of the person"
                   },
                   "message": {
                     "type": "string",
@@ -3318,9 +3239,9 @@
                     "type": "string",
                     "description": "Name of the person"
                   },
-                  "age": {
-                    "type": "number",
-                    "description": "Age of the person"
+                  "number": {
+                    "type": "string",
+                    "description": "number of the person"
                   },
                   "message": {
                     "type": "string",
@@ -3871,6 +3792,197 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/api/appLink": {
+      "post": {
+        "tags": ["AppLink"],
+        "summary": "Add new app links",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["android", "ios"],
+                "properties": {
+                  "android": {
+                    "type": "string",
+                    "description": "Android app link"
+                  },
+                  "ios": {
+                    "type": "string",
+                    "description": "iOS app link"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "App links created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AppLink"
+                    },
+                    "error": {
+                      "type": "null"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      },
+      "get": {
+        "tags": ["AppLink"],
+        "summary": "Get all app links",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "List of all app links",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AppLink"
+                      }
+                    },
+                    "error": {
+                      "type": "null"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/appLink/latest": {
+      "get": {
+        "tags": ["AppLink"],
+        "summary": "Get latest app links",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Latest app links",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AppLink"
+                    },
+                    "error": {
+                      "type": "null"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No app links found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/appLink/{id}": {
+      "put": {
+        "tags": ["AppLink"],
+        "summary": "Update app links",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "AppLink ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "android": {
+                    "type": "string",
+                    "description": "Android app link"
+                  },
+                  "ios": {
+                    "type": "string",
+                    "description": "iOS app link"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "App links updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/AppLink"
+                    },
+                    "error": {
+                      "type": "null"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "AppLink not found"
+          },
+          "500": {
+            "description": "Server error"
           }
         }
       }
@@ -4588,7 +4700,35 @@
             "description": "Last update timestamp"
           }
         }
+      },
+      "AppLink": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "description": "AppLink ID"
+          },
+          "android": {
+            "type": "string",
+            "description": "Android app link"
+          },
+          "ios": {
+            "type": "string",
+            "description": "iOS app link"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Creation timestamp"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last update timestamp"
+          }
+        }
       }
     }
   }
 }
+

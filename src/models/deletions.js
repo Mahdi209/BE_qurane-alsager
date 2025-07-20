@@ -27,7 +27,7 @@ const deletionsSchema = new mongoose.Schema(
   },
     {
         timestamps: true,
-        VersionKey: false,
+        versionKey: false,
     });
 
 const Deletion = mongoose.model("Deletion", deletionsSchema);

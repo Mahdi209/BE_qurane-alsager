@@ -66,7 +66,7 @@ exports.getAllQuestionsForMobile = async (req, res) => {
 
 exports.getAllQuestionsForMobileApp = async (req, res) => {
     try {
-        const questions = await Question.find({ is_deleted: false, status: true , app: false })
+        const questions = await Question.find({ is_deleted: false, status: true , app: true })
             .select('question_text option1 option2 option3 correctOption categoryId ageGroupId status timeLimitSec')
             .populate('categoryId', 'name')
             .populate('ageGroupId', 'name');

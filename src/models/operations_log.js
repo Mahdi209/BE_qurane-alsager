@@ -28,7 +28,7 @@ const operationsLogSchema = new mongoose.Schema(
   },
     {
         timestamps: true,
-        VersionKey: false,
+        versionKey: false,
     });
 
 const OperationsLog = mongoose.model("OperationsLog", operationsLogSchema);

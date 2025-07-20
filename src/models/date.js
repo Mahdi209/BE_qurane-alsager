@@ -13,6 +13,10 @@ const TimeSchema = new mongoose.Schema(
             required: true
         },
     },
+    {
+        timestamps: true,
+        versionKey: false,
+    }
 );
 
 const Time = mongoose.model("Time", TimeSchema);

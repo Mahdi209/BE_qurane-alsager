@@ -81,7 +81,7 @@ const adminSchema = new mongoose.Schema(
   },
     {
         timestamps: true,
-        VersionKey: false,
+        versionKey: false,
     });
 
 const Admin = mongoose.model("Admin", adminSchema);

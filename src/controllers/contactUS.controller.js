@@ -1,19 +1,23 @@
 const Contact = require('../models/contactUs');
-const { sendResponse,handleOperationLog,handleDeletion } = require('../Utilities/response');
+const { sendResponse, handleOperationLog, handleDeletion } = require('../Utilities/response');
 
 exports.createContact = async (req, res) => {
     try {
-        const { name, age, message } = req.body;
+        const { name,number, message } = req.body;
+    if (!name || !number || !message) {
+        return sendResponse(res, null, "All fields are required", 400);
+    }
 
         const contactMessage = new Contact({
             name,
-            age,
+            number,
             message
         });
 
         await contactMessage.save();
         return sendResponse(res, contactMessage, null, 201);
     } catch (error) {
+        console.error('Contact creation error:', error);
         return sendResponse(res, null, error.message, 500);
     }
 };
@@ -41,10 +45,10 @@ exports.getContactById = async (req, res) => {
 
 exports.updateContact= async (req, res) => {
     try {
-        const { name, age, message } = req.body;
+        const { name, number, message } = req.body;
         const contactMessage = await Contact.findByIdAndUpdate(
             req.params.id,
-            { name, age, message },
+            { name, number, message },
             { new: true }
         );
 

@@ -61,7 +61,6 @@
 
 const express = require("express");
 const morgan = require("morgan");
-const helmet = require("helmet");
 const cors = require("cors");
 const swaggerUi = require("swagger-ui-express");
 const swaggerDocument = require("./config/swagger.json");
@@ -77,11 +76,12 @@ const PORT = process.env.PORT || 6001;
 
 app.use(express.static('public'));
 app.use(cors({
-    origin: 'http://localhost:5173', // أو عنوان الفرونت إند الدقيق
+    origin: 'http://localhost:5173',
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
 app.use(express.json());
 app.use(morgan("dev"));
 app.use(cookieParser());

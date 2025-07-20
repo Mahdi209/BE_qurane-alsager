@@ -9,7 +9,7 @@ const suggestionSchema = new mongoose.Schema(
     },
     {
         timestamps: true,
-        VersionKey: false,
+        versionKey: false,
     });
 
 const suggestion = mongoose.model("suggestions", suggestionSchema);

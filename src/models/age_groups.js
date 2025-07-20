@@ -11,7 +11,7 @@ const ageSchema = new mongoose.Schema(
   },
     {
         timestamps: true,
-        VersionKey: false,
+        versionKey: false,
     });
 
 const AgeGroup = mongoose.model("AgeGroup", ageSchema);
