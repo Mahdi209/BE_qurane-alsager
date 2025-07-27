@@ -31,7 +31,9 @@ const questionSchema = new mongoose.Schema(
     categoryId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Category",
-      required: true,
+      required: false,
+      default: null,
+
     },
     ageGroupId: {
       type: mongoose.Schema.Types.ObjectId,

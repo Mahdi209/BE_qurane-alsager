@@ -13,6 +13,8 @@ const searchRoutes = require('./search.router');
 const contact = require('./contactUS.router');
 const versionRouter = require("./version.router");
 const appLinkRoutes = require("./appLink.router");
+const filterRouter = require("./filter.router");
+
 
 router.use('/roles', roleRoutes);
 router.use('/admin', adminRoutes);
@@ -27,6 +29,7 @@ router.use('/search', searchRoutes);
 router.use('/contact', contact);
 router.use('/version', versionRouter);
 router.use('/appLink', appLinkRoutes);
+router.use('/filter', filterRouter);
 
 
 

@@ -698,6 +698,11 @@
                   "maxAge": {
                     "type": "number",
                     "description": "Maximum age for the group"
+                  },
+                  "skip": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "this is used to skip the category in the app"
                   }
                 }
               }
@@ -1329,6 +1334,7 @@
         }
       }
     },
+
     "/api/ageGroups/mobile": {
       "get": {
         "tags": ["Age Groups"],
@@ -3984,6 +3990,67 @@
           "500": {
             "description": "Server error"
           }
+        }
+      }
+    },
+    "/api/filter/questions": {
+      "get": {
+        "tags": ["Filter"],
+        "summary": "Filter questions by age group, category, created_by, or createdAt",
+        "description": "Returns questions filtered by provided query parameters.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "ageGroup",
+            "schema": { "type": "string" },
+            "description": "Age group ID"
+          },
+          {
+            "in": "query",
+            "name": "category",
+            "schema": { "type": "string" },
+            "description": "Category ID"
+          },
+          {
+            "in": "query",
+            "name": "created_by",
+            "schema": { "type": "string" },
+            "description": "Admin ID who created the question"
+          },
+          {
+            "in": "query",
+            "name": "createdAt",
+            "schema": { "type": "string", "format": "date-time" },
+            "description": "Creation date"
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "schema": { "type": "string" },
+            "description": "Status of the question (e.g., active, inactive)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Filtered questions returned successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "count": { "type": "number" },
+                    "data": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Question" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Invalid ID format provided" },
+          "500": { "description": "Internal server error" }
         }
       }
     }

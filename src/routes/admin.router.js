@@ -4,7 +4,7 @@ const { signup, login, logout, refreshAccessToken,forgetPassword, deleteAdmin, u
 const { verifyToken, isSupervisor, isActive} = require('../middleware/Authentication');
 const upload = require('../middleware/uploadFile');
 // Auth routes
-router.post('/signup',verifyToken, isSupervisor,upload.single("profile"), signup);
+router.post('/signup',upload.single("profile"), signup);
 router.post('/login', login);
 router.post('/logout', verifyToken, logout);
 router.post('/refresh-token', refreshAccessToken);

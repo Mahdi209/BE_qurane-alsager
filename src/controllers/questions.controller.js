@@ -1,56 +1,72 @@
 const Question = require("../models/questions");
 const Time = require("../models/date");
 const { sendResponse, handleOperationLog, handleDeletion} = require("../Utilities/response");
+const { getIO } = require("../socket");
 
 exports.createQuestion = async (req, res) => {
-  try {
-    const {
-      question_text,
-      option1,
-      option2,
-      option3,
-      correctOption,
-      timeLimitSec,
-      categoryId,
-      ageGroupId,
-      status,
-        app,
-        platform
-    } = req.body;
+    try {
+        const {
+            question_text,
+            option1,
+            option2,
+            option3,
+            correctOption,
+            timeLimitSec,
+            categoryId,
+            ageGroupId,
+            status,
+            app,
+            platform
+        } = req.body;
 
-    const newQuestion = new Question({
-      question_text,
-      option1,
-      option2,
-      option3,
-      correctOption,
-      timeLimitSec,
-      categoryId,
-      ageGroupId,
-      status,
-      created_by: req.admin.id,
-        app,
-        platform
-    });
+        const newQuestion = new Question({
+            question_text,
+            option1,
+            option2,
+            option3,
+            correctOption,
+            timeLimitSec,
+            categoryId,
+            ageGroupId,
+            status,
+            created_by: req.admin.id,
+            app,
+            platform
+        });
 
-    await newQuestion.save();
-    const time = await Time.create({
-        type: 'Question'
-    });
-    await handleOperationLog(
-      req.admin.id,
-      'Create',
-      'Question',
-      newQuestion._id,
-      `${req.admin.username} created a new question`
-    );
+        // احفظ أولاً
+        const savedQuestion = await newQuestion.save();
 
-    return sendResponse(res, newQuestion, null, 201);
-  } catch (err) {
-    return sendResponse(res, null, err.message, 500);
-  }
+        // ثم اعمل populate
+        const populatedQuestion = await Question.findById(savedQuestion._id)
+            .populate('categoryId', 'name')
+            .populate('ageGroupId', 'name')
+            .populate('created_by', 'username')
+            .populate('updated_by', 'username')
+            .populate('deleted_by', 'username');
+
+        const time = await Time.create({
+            type: 'Question'
+        });
+
+        await handleOperationLog(
+            req.admin.id,
+            'Create',
+            'Question',
+            savedQuestion._id,
+            `${req.admin.username} created a new question`
+        );
+
+        getIO().emit(
+            `questions/${savedQuestion.status}`,
+            populatedQuestion
+        );
+
+        return sendResponse(res, populatedQuestion, null, 201);
+    } catch (err) {
+        return sendResponse(res, null, err.message, 500);
+    }
 };
-
 exports.getAllQuestionsForMobile = async (req, res) => {
   try {
     const questions = await Question.find({ is_deleted: false, status: true })

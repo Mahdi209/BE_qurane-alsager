@@ -4,13 +4,14 @@ const Time = require("../models/date");
 
 exports.createAgeGroup = async (req, res) => {
   try {
-    const { name, minAge, maxAge } = req.body;
+    const { name, minAge, maxAge,skip } = req.body;
     const admin = req.admin;
 
     const newAgeGroup = new AgeGroup({
       name,
       minAge,
-      maxAge
+      maxAge,
+      skip,
     });
     await newAgeGroup.save();
       const time = await Time.create({
@@ -73,7 +74,9 @@ exports.update = async (req, res) => {
     await ageGroup.save();
     await handleOperationLog(admin.id, 'Update', 'age_group', ageGroup._id,
       `${admin.username} تم تحديث تصنيف العمر`);
-
+      const time = await Time.create({
+          type: 'Age',
+      });
     return sendResponse(res, ageGroup, null, 200);
   } catch (err) {
     return sendResponse(res, null, err.message, 500);

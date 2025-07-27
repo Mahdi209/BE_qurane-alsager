@@ -83,7 +83,7 @@ const signup = async (req, res) => {
             password: hashedPassword,
             role,
             permissions,
-            profile: `/admins/${profile.filename}`
+            profile: `/admins_image/${profile.filename}`
         });
 
         await admin.save();
@@ -99,7 +99,7 @@ const signup = async (req, res) => {
             profile: admin.profile
         };
 
-        await handleOperationLog(requestingAdmin.id, 'Create', "admin", admin._id, `تم انشاء حساب مستخدم باسم ${admin.username}`);
+        // await handleOperationLog(requestingAdmin.id, 'Create', "admin", admin._id, `تم انشاء حساب مستخدم باسم ${admin.username}`);
 
         return sendResponse(res, { admin: adminData });
     } catch (error) {
@@ -118,13 +118,15 @@ const login = async (req, res) => {
         const { username, password } = req.body;
 
         const admin = await Admin.findOne({ username });
-        if (admin.status === 'inactive') {
-            return sendResponse(res, null, 'Access denied. this user is inactive.', 500);
-        }
 
-
+        // Check if admin exists FIRST
         if (!admin) {
             return sendResponse(res, null, 'Invalid username or password', 401);
+        }
+
+        // THEN check if admin is inactive
+        if (admin.status === 'inactive') {
+            return sendResponse(res, null, 'Access denied. this user is inactive.', 500);
         }
 
         const validPassword = await bcrypt.compare(password, admin.password);
@@ -152,6 +154,7 @@ const login = async (req, res) => {
             role: admin.role,
             permissions: admin.permissions
         };
+
         await handleOperationLog(adminData.id, 'Get',"admin", admin._id, `تم دخول لحساب ادمن باسم ${admin.username}`);
 
         return sendResponse(res, { admin: adminData, accessToken }, null, 200);
@@ -359,7 +362,7 @@ const getAllAdmins = async (req, res) => {
 
         return sendResponse(res, { admins });
     } catch (error) {
-        console.error('Get all admins error:', error);
+        console.error('Get all admins_image error:', error);
         return sendResponse(res, null, 'Internal server error', 500);
     }
 };
