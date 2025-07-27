@@ -17,6 +17,11 @@ const categorySchema = new mongoose.Schema(
         type: Boolean,
         default: false,
       },
+    skip: {
+        type: Boolean,
+        default: false,
+      },
+
   },
     {
     timestamps: true,

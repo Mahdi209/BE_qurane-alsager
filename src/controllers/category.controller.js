@@ -5,7 +5,7 @@ const Time = require("../models/date");
 const categoryController = {
     create: async (req, res) => {
         try {
-            const { name, description,app,platform } = req.body;
+            const { name, description,app,platform,skip } = req.body;
             const admin = req.admin;
 
             const existingCategory = await Category.findOne({ name, is_deleted: false });
@@ -13,7 +13,7 @@ const categoryController = {
                 return sendResponse(res, null, 'Category already exists', 400);
             }
 
-            const category = new Category({ name, description,app,platform,created_by: admin.id });
+            const category = new Category({ name, description,app,platform,skip,created_by: admin.id });
 
             const savedCategory = await category.save();
 
@@ -32,7 +32,15 @@ const categoryController = {
 
     getAll: async (req, res) => {
         try {
-            const categories = await Category.find({ is_deleted: false });
+            const categories = await Category.find({ is_deleted: false, });
+            return sendResponse(res, categories);
+        } catch (error) {
+            return sendResponse(res, null, error.message, 500);
+        }
+    },
+    getAllSkipAge: async (req, res) => {
+        try {
+            const categories = await Category.find({ is_deleted: false, skip: true });
             return sendResponse(res, categories);
         } catch (error) {
             return sendResponse(res, null, error.message, 500);
@@ -144,6 +152,7 @@ const categoryController = {
             return sendResponse(res, null, err.message, 500);
         }
     },
+
     getCategoriesForApp: async (req, res) => {
         try {
             const categories = await Category.find(
@@ -155,6 +164,7 @@ const categoryController = {
             return sendResponse(res, null, err.message, 500);
         }
     },
+
     getCategoriesForPlatform: async (req, res) => {
         try {
             const categories = await Category.find(

@@ -9,12 +9,14 @@ const {
     canDeleteCategory
 } = require('../middleware/rolePermissions');
 
+
 router.get('/mobile', categoryController.getCategoriesForMobile);
 router.get('/App', categoryController.getCategoriesForApp);
 router.get('/Platform', categoryController.getCategoriesForPlatform);
+router.get('/SkipAgeGroup', categoryController.getAllSkipAge);
+
 
 router.use(verifyToken);
-
 router.post('/', canCreateCategory, categoryController.create);
 router.get('/', canReadCategory, categoryController.getAll);
 router.get('/:id', canReadCategory, categoryController.getById);

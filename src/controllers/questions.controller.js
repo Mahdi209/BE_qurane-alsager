@@ -67,6 +67,7 @@ exports.createQuestion = async (req, res) => {
         return sendResponse(res, null, err.message, 500);
     }
 };
+
 exports.getAllQuestionsForMobile = async (req, res) => {
   try {
     const questions = await Question.find({ is_deleted: false, status: true })
@@ -93,6 +94,20 @@ exports.getAllQuestionsForMobileApp = async (req, res) => {
     }
 };
 
+exports.getAllQuestionsForAllAgeGroup = async (req, res) => {
+    try {
+        const questions = await Question.find({ is_deleted: false, status: true,ageGroupId: null })
+            .select('question_text option1 option2 option3 correctOption categoryId ageGroupId status timeLimitSec')
+            .populate('categoryId', 'name')
+            .populate('ageGroupId', 'name');
+
+        return sendResponse(res, questions, null, 200);
+    } catch (err) {
+        return sendResponse(res, null, err.message, 500);
+    }
+};
+
+
 exports.getAllQuestionsForMobilePlatform = async (req, res) => {
     try {
         const questions = await Question.find({ is_deleted: false, status: true, platform: true })
@@ -105,7 +120,6 @@ exports.getAllQuestionsForMobilePlatform = async (req, res) => {
         return sendResponse(res, null, err.message, 500);
     }
 };
-
 
 exports.getAllQuestionsForDashboard = async (req, res) => {
   try {
@@ -234,6 +248,7 @@ exports.updateQuestion = async (req, res) => {
       const time = await Time.create({
           type: 'Question'
       });
+
     await handleOperationLog(
       req.admin.id,
       'Update',

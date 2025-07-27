@@ -336,6 +336,10 @@
                     "type": "string",
                     "example": "Science"
                   },
+                  "skip": {
+                    "type": "boolean",
+                    "default": false
+                  },
                   "description": {
                     "type": "string",
                     "example": "Scientific questions category"
@@ -986,6 +990,31 @@
         }
       }
     },
+    "/api/questions/AllAgeGroup": {
+      "get": {
+        "tags": ["Questions"],
+        "summary": "Get questions for mobile app (limited fields)",
+        "responses": {
+          "200": {
+            "description": "List of questions for mobile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/QuestionMobile"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+
     "/api/questions/dashboard": {
       "get": {
         "tags": ["Questions"],
@@ -1334,6 +1363,51 @@
         }
       }
     },
+    "/api/categories/SkipAgeGroup": {
+      "get": {
+        "tags": ["Categories"],
+        "summary": "Get categories for platform",
+        "description": "Get all active categories that are enabled for the platform",
+        "responses": {
+          "200": {
+            "description": "List of categories for Skip Age Group",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/CategoryMobile"
+                      }
+                    },
+                    "error": {
+                      "type": "null"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
 
     "/api/ageGroups/mobile": {
       "get": {

@@ -12,6 +12,8 @@ const {
 router.post("/", verifyToken, canCreateQuestion, questionsController.createQuestion);
 
 router.get("/", questionsController.getAllQuestionsForMobile);
+router.get("/AllAgeGroup", questionsController.getAllQuestionsForAllAgeGroup);
+
 
 router.get("/Platform", questionsController.getAllQuestionsForMobilePlatform);
 

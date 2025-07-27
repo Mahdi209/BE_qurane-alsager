@@ -2,16 +2,16 @@ module.exports = {
   apps: [{
     name: "QuranAlsager",
     script: "./src/server.js",
-    instances: 1,  // Changed from "max" to 4 instances
+    instances: 1,
     exec_mode: "cluster",
     watch: true,
     env: {
       NODE_ENV: "development",
-      PORT: 5056
+      PORT: 6001
     },
     env_production: {
       NODE_ENV: "production",
-      PORT: 5056
+      PORT: 6001
     }
   }]
 }
