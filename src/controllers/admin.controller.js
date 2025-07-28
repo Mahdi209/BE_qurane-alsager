@@ -99,7 +99,7 @@ const signup = async (req, res) => {
             profile: admin.profile
         };
 
-        // await handleOperationLog(requestingAdmin.id, 'Create', "admin", admin._id, `تم انشاء حساب مستخدم باسم ${admin.username}`);
+        await handleOperationLog(requestingAdmin.id, 'Create', "admin", admin._id, `تم انشاء حساب مستخدم باسم ${admin.username}`);
 
         return sendResponse(res, { admin: adminData });
     } catch (error) {

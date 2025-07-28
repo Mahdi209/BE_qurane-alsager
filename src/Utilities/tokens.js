@@ -10,7 +10,7 @@ const generateAccessToken = (admin) => {
         username: admin.username,
         fullName: admin.fullName ? admin.fullName : '',
         email: admin.email,
-        roleId: admin.role,
+        role: admin.role,
         permissions: admin.permissions || {},
     };
 

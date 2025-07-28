@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const { signup, login, logout, refreshAccessToken,forgetPassword, deleteAdmin, updateAdminName, updateAdminRole, getAllAdmins, updateAdminStatus, resetPassword } = require('../controllers/admin.controller');
-const { verifyToken, isSupervisor, isActive} = require('../middleware/Authentication');
+const { verifyToken, isAdminOrSupervisor, isActive} = require('../middleware/Authentication');
 const upload = require('../middleware/uploadFile');
 // Auth routes
-router.post('/signup',upload.single("profile"), signup);
+router.post('/signup',isAdminOrSupervisor,upload.single("profile"), signup);
 router.post('/login', login);
 router.post('/logout', verifyToken, logout);
 router.post('/refresh-token', refreshAccessToken);
