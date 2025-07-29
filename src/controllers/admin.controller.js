@@ -3,7 +3,7 @@ const Admin = require('../models/admins');
 const { signupSchema, loginSchema } = require('../Validation/admin.validation');
 const { generateTokens, verifyRefreshToken } = require('../Utilities/tokens');
 const { sendResponse,handleOperationLog } = require('../Utilities/response');
-const {sendEmail} = require("../Utilities/email");
+const { sendEmail } = require("../Utilities/email");
 
 const signup = async (req, res) => {
     try {
@@ -235,7 +235,6 @@ const refreshAccessToken = async (req, res) => {
     }
 };
 
-
 const deleteAdmin = async (req, res) => {
     try {
         const { id } = req.params;
@@ -367,6 +366,18 @@ const getAllAdmins = async (req, res) => {
     }
 };
 
+const getAllAdminsForFilter = async (req, res) => {
+    try {
+        const admins = await Admin.find({status: "active"})
+            .select('-password -refreshToken -tokenVersion -permissions -role -status -profile -createdAt -updatedAt -email');
+
+        return sendResponse(res, { admins });
+    } catch (error) {
+        console.error('Get all admins_image error:', error);
+        return sendResponse(res, null, 'Internal server error', 500);
+    }
+};
+
 const resetPassword = async (req, res) => {
     try {
         const { newPassword } = req.body;
@@ -478,5 +489,6 @@ module.exports = {
     getAllAdmins,
     updateAdminStatus,
     resetPassword,
-    forgetPassword
+    forgetPassword,
+    getAllAdminsForFilter
 };
