@@ -41,7 +41,7 @@
       }
     },
 
-    "/api/admin/signup": {
+    "/api/admin/create-user": {
       "post": {
         "tags": ["Admin"],
         "summary": "Create a new admin account",
@@ -4183,6 +4183,90 @@
           },
           "400": { "description": "Invalid ID format provided" },
           "500": { "description": "Internal server error" }
+        }
+      }
+    },
+    "/api/admin/{id}/profile": {
+      "patch": {
+        "tags": ["Admin"],
+        "summary": "Update admin profile image",
+        "description": "Update an admin's profile image",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Admin ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["profile"],
+                "properties": {
+                  "profile": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Profile image file"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Profile updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "Profile updated successfully"
+                        },
+                        "profile": {
+                          "type": "string",
+                          "example": "/admins_image/profile-1234567890.jpeg",
+                          "description": "Updated profile image path"
+                        }
+                      }
+                    },
+                    "error": {
+                      "type": "null"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "No profile image provided"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Admin not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
         }
       }
     }

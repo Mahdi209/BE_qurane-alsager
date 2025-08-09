@@ -66,7 +66,7 @@ const categoryController = {
 
     update: async (req, res) => {
         try {
-            const { name, description } = req.body;
+            const { name, description,app,platform,skip } = req.body;
             const admin = req.admin;
 
             const category = await Category.findOne({
@@ -95,6 +95,9 @@ const categoryController = {
                 {
                     name,
                     description,
+                    app,
+                    platform,
+                    skip,
                     updated_by: admin.id,
                 },
                 { new: true, runValidators: true }
@@ -145,7 +148,7 @@ const categoryController = {
         try {
             const categories = await Category.find(
                 { is_deleted: false},
-                'name description'
+                'name description skip'
             );
             return sendResponse(res, categories, null, 200);
         } catch (err) {
@@ -157,7 +160,7 @@ const categoryController = {
         try {
             const categories = await Category.find(
                 { is_deleted: false , app: true},
-                'name description'
+                'name description skip'
             );
             return sendResponse(res, categories, null, 200);
         } catch (err) {
@@ -169,7 +172,7 @@ const categoryController = {
         try {
             const categories = await Category.find(
                 { is_deleted: false,platform: true},
-                'name description'
+                'name description skip'
             );
             return sendResponse(res, categories, null, 200);
         } catch (err) {

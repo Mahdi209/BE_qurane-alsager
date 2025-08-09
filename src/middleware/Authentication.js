@@ -83,6 +83,7 @@ const isActive = async (req, res, next) => {
 const isAdminOrSupervisor = async (req, res, next) => {
     try {
         if (!['admin', 'supervisor'].includes(req.admin.role)) {
+
             return sendResponse(res, null, 'Access denied. Admin or Supervisor role required.', 403);
         }
         next();

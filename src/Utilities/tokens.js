@@ -12,6 +12,7 @@ const generateAccessToken = (admin) => {
         email: admin.email,
         role: admin.role,
         permissions: admin.permissions || {},
+        profile:admin.profile
     };
 
     return jwt.sign(payload, accessSecret, {

@@ -10,22 +10,29 @@ const signup = async (req, res) => {
         const requestingAdmin = req.admin;
         const profile = req.file;
 
-        if (!profile) {
-            return sendResponse(res, null, 'Profile image is required', 400);
-        }
-
+        // Validate request body
         const { error } = signupSchema.validate(req.body);
         if (error) {
             return sendResponse(res, null, error.details[0].message, 400);
         }
 
-        const { username, email, role = 'user',fullName } = req.body;
+        const { username, email, role = 'user', fullName, permissions } = req.body;
 
-        const existingAdmin = await Admin.findOne({ email });
+        // Check if admin already exists
+        const existingAdmin = await Admin.findOne({
+            $or: [{ email }, { username }]
+        });
         if (existingAdmin) {
-            return sendResponse(res, null, 'Email already registered', 400);
+            if (existingAdmin.email === email) {
+                return sendResponse(res, null, 'Email already registered', 400);
+            }
+            if (existingAdmin.username === username) {
+                return sendResponse(res, null, 'Username already exists', 400);
+            }
         }
-        const password = "quran12345"
+
+        // Generate default password
+        const password = "quran12345";
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
@@ -51,44 +58,58 @@ const signup = async (req, res) => {
             }
         };
 
-        let permissions = defaultPermissions;
+        // Handle permissions from request
+        let finalPermissions = defaultPermissions;
 
-        // Only try to parse permissions if they're provided
-        if (req.body.permissions) {
+        if (permissions) {
             try {
-                const parsedPermissions = JSON.parse(req.body.permissions);
-                permissions = {
+                // If permissions is a string, parse it
+                const parsedPermissions = typeof permissions === 'string'
+                    ? JSON.parse(permissions)
+                    : permissions;
+
+                // Merge with default permissions
+                finalPermissions = {
                     category: {
                         ...defaultPermissions.category,
-                        ...parsedPermissions.category
+                        ...(parsedPermissions.category || {})
                     },
                     ageGroup: {
                         ...defaultPermissions.ageGroup,
-                        ...parsedPermissions.ageGroup
+                        ...(parsedPermissions.ageGroup || {})
                     },
                     question: {
                         ...defaultPermissions.question,
-                        ...parsedPermissions.question
+                        ...(parsedPermissions.question || {})
                     }
                 };
             } catch (parseError) {
+                console.error('Permissions parsing error:', parseError);
                 return sendResponse(res, null, 'Invalid permissions format', 400);
             }
         }
 
-        const admin = new Admin({
-            username,
-            fullName,
-            email,
+        // Create admin object
+        const adminData = {
+            username: username.trim(),
+            fullName: fullName.trim(),
+            email: email.trim(),
             password: hashedPassword,
             role,
-            permissions,
-            profile: `/admins_image/${profile.filename}`
-        });
+            permissions: finalPermissions,
+            status: 'active' // Set default status
+        };
 
+        // Add profile image if provided
+        if (profile) {
+            adminData.profile = `/admins_image/${profile.filename}`;
+        }
+
+        const admin = new Admin(adminData);
         await admin.save();
 
-        const adminData = {
+        // Prepare response data (exclude password)
+        const responseAdminData = {
             id: admin._id,
             username: admin.username,
             fullName: admin.fullName,
@@ -96,14 +117,36 @@ const signup = async (req, res) => {
             role: admin.role,
             permissions: admin.permissions,
             status: admin.status,
-            profile: admin.profile
+            profile: admin.profile || null,
+            createdAt: admin.createdAt
         };
 
-        await handleOperationLog(requestingAdmin.id, 'Create', "admin", admin._id, `تم انشاء حساب مستخدم باسم ${admin.username}`);
+        // Log the operation
+        await handleOperationLog(
+            requestingAdmin.id,
+            'Create',
+            "admin",
+            admin._id,
+            `تم انشاء حساب مستخدم باسم ${admin.username}`
+        );
 
-        return sendResponse(res, { admin: adminData });
+        return sendResponse(res, 'User created successfully',null, 201);
+
     } catch (error) {
         console.error('Signup error:', error);
+
+        // Handle specific mongoose validation errors
+        if (error.name === 'ValidationError') {
+            const validationErrors = Object.values(error.errors).map(err => err.message);
+            return sendResponse(res, null, validationErrors.join(', '), 400);
+        }
+
+        // Handle duplicate key errors
+        if (error.code === 11000) {
+            const field = Object.keys(error.keyPattern)[0];
+            return sendResponse(res, null, `${field} already exists`, 400);
+        }
+
         return sendResponse(res, null, 'Internal server error', 500);
     }
 };
@@ -141,8 +184,8 @@ const login = async (req, res) => {
 
         res.cookie('refreshToken', refreshToken, {
             httpOnly: true,
-            secure: false,
-            sameSite: 'lax',
+            secure: true,
+            sameSite: 'none',
             maxAge: 7 * 24 * 60 * 60 * 1000
         });
 
@@ -202,30 +245,40 @@ const logout = async (req, res) => {
 const refreshAccessToken = async (req, res) => {
     try {
         const { refreshToken } = req.cookies;
-
         if (!refreshToken) {
             return sendResponse(res, null, 'No refresh token provided', 400);
         }
+
         const { valid, data } = verifyRefreshToken(refreshToken);
         if (!valid) {
             return sendResponse(res, null, 'Invalid refresh token', 401);
         }
+
         const admin = await Admin.findById(data.id).populate('role');
-        if (!admin || admin.tokenVersion !== data.tokenVersion) {
+
+        // Check if admin exists first
+        if (!admin) {
+            console.log('Admin not found for ID:', data.id);
             return sendResponse(res, null, 'Invalid refresh token', 401);
         }
-        const tokens = generateTokens(admin);
 
+        if (admin.tokenVersion !== data.tokenVersion) {
+            console.log('Token version mismatch:', {
+                adminVersion: admin.tokenVersion,
+                tokenVersion: data.tokenVersion
+            });
+            return sendResponse(res, null, 'Invalid refresh token', 401);
+        }
+
+        const tokens = generateTokens(admin);
         admin.refreshToken = tokens.refreshToken;
         await admin.save();
 
-        // هنا التعديل: استخدم tokens.refreshToken الجديد
         res.cookie('refreshToken', tokens.refreshToken, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+            secure: true,
+            sameSite: 'none',
             maxAge: 7 * 24 * 60 * 60 * 1000,
-            domain: process.env.NODE_ENV === 'production' ? '.yourdomain.com' : undefined
         });
 
         return sendResponse(res, { accessToken: tokens.accessToken }, null, 200);
@@ -354,12 +407,43 @@ const updateAdminStatus = async (req, res) => {
     }
 };
 
+const updateAdminProfile = async (req, res) => {
+    try {
+        const requestingAdmin = req.admin;
+        const { id } = req.params;
+        const profile = req.file;
+
+        if (!profile) {
+            return sendResponse(res, null, 'No profile image provided', 400);
+        }
+
+        const admin = await Admin.findById(id);
+
+        if (!admin) {
+            return sendResponse(res, null, 'Admin not found', 404);
+        }
+
+
+        admin.profile = `/admins_image/${profile.filename}`;
+        await admin.save();
+        await handleOperationLog(requestingAdmin.id, 'Update', "admin", id, `تم تحديث صورة المستخدم`);
+
+        return sendResponse(res, {
+            message: 'Profile updated successfully',
+            profile: admin.profile
+        });
+    } catch (error) {
+        console.error('Update admin status error:', error);
+        return sendResponse(res, null, 'Internal server error', 500);
+    }
+};
+
 const getAllAdmins = async (req, res) => {
     try {
         const admins = await Admin.find({ role: { $in: ['admin', 'user'] } })
             .select('-password -refreshToken');
 
-        return sendResponse(res, { admins });
+        return sendResponse(res,  admins );
     } catch (error) {
         console.error('Get all admins_image error:', error);
         return sendResponse(res, null, 'Internal server error', 500);
@@ -371,7 +455,7 @@ const getAllAdminsForFilter = async (req, res) => {
         const admins = await Admin.find({status: "active"})
             .select('-password -refreshToken -tokenVersion -permissions -role -status -profile -createdAt -updatedAt -email');
 
-        return sendResponse(res, { admins });
+        return sendResponse(res,  admins );
     } catch (error) {
         console.error('Get all admins_image error:', error);
         return sendResponse(res, null, 'Internal server error', 500);
@@ -490,5 +574,6 @@ module.exports = {
     updateAdminStatus,
     resetPassword,
     forgetPassword,
-    getAllAdminsForFilter
+    getAllAdminsForFilter,
+    updateAdminProfile
 };

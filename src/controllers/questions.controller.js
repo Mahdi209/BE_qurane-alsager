@@ -240,7 +240,11 @@ exports.updateQuestion = async (req, res) => {
         updated_by: req.admin.id,
       },
       { new: true }
-    );
+    ).populate('categoryId', 'name')
+        .populate('ageGroupId', 'name')
+        .populate('created_by', 'username')
+        .populate('updated_by', 'username')
+        .populate('deleted_by', 'username');
 
     if (!question) {
       return sendResponse(res, null, "Question not found", 404);
@@ -256,6 +260,7 @@ exports.updateQuestion = async (req, res) => {
       question._id,
       `${req.admin.username} updated a question`
     );
+      getIO().emit(`updateQuestion`, question);
 
     return sendResponse(res, question, null, 200);
   } catch (err) {
@@ -289,7 +294,7 @@ exports.deleteQuestion = async (req, res) => {
       `${req.admin.username} تم حذف هذا السؤال من قبل الادمن `
     );
       await handleDeletion(req.admin.id, 'question', req.params.id, `تم الحذف بواسطة الادمن ${req.admin.username}`);
-
+        getIO().emit(`deleteQuestions`, question._id);
     return sendResponse(res, { message: "Question deleted successfully" }, null, 200);
   } catch (err) {
     return sendResponse(res, null, err.message, 500);
