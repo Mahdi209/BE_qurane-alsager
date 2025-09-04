@@ -1,13 +1,17 @@
 const express = require('express');
 const router = express.Router();
-const { signup, login,getAllAdminsForFilter, logout, refreshAccessToken,forgetPassword,updateAdminProfile, deleteAdmin, updateAdminName, updateAdminRole, getAllAdmins, updateAdminStatus, resetPassword } = require('../controllers/admin.controller');
+const { verifyTheAccount,signup, login,getAllAdminsForFilter, logout, refreshAccessToken,forgetPassword,updateAdminProfile, deleteAdmin, updateAdminName, updateAdminRole, getAllAdmins, updateAdminStatus, resetPassword, sendOTP, resetPasswordWithOTP } = require('../controllers/admin.controller');
 const { verifyToken, isAdminOrSupervisor,isSupervisor, isActive} = require('../middleware/Authentication');
 const upload = require('../middleware/uploadFile');
 
 router.post('/create-user',verifyToken, isAdminOrSupervisor, upload.single("profile"), signup);
 router.post('/login', login);
 router.post('/refresh-token', refreshAccessToken);
-router.patch('/forget-password', forgetPassword);
+router.post('/forget-password', forgetPassword);
+router.post('/send-otp', sendOTP);
+router.post('/reset-password-with-otp', resetPasswordWithOTP);
+router.post('/verify', verifyTheAccount);
+
 
 router.use(verifyToken, isActive);
 router.get('/getAllUserForFilter', getAllAdminsForFilter);

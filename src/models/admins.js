@@ -19,6 +19,8 @@ const adminSchema = new mongoose.Schema(
         enum: ['supervisor', 'admin', 'user'],
         default: 'user',
     },
+    verifyEmail: { type: Boolean,default:false, required: true },
+    dateVerifyEmail: { type: Date, required: false, default: null },
     refreshToken: { type: String },
     tokenVersion: { type: Number, default: 0 },
     permissions: {

@@ -1,9 +1,10 @@
 const bcrypt = require('bcryptjs');
 const Admin = require('../models/admins');
+const Otp = require('../models/otpCode');
 const { signupSchema, loginSchema } = require('../Validation/admin.validation');
 const { generateTokens, verifyRefreshToken } = require('../Utilities/tokens');
 const { sendResponse,handleOperationLog } = require('../Utilities/response');
-const { sendEmail } = require("../Utilities/email");
+const { sendEmail,sendOTPToEmail,sendAccountVerifiedEmail } = require("../Utilities/email");
 
 const signup = async (req, res) => {
     try {
@@ -16,7 +17,7 @@ const signup = async (req, res) => {
             return sendResponse(res, null, error.details[0].message, 400);
         }
 
-        const { username, email, role = 'user', fullName, permissions } = req.body;
+        const { username, email, role = 'user', fullName, permissions,password } = req.body;
 
         // Check if admin already exists
         const existingAdmin = await Admin.findOne({
@@ -32,7 +33,6 @@ const signup = async (req, res) => {
         }
 
         // Generate default password
-        const password = "quran12345";
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
@@ -127,7 +127,7 @@ const signup = async (req, res) => {
             'Create',
             "admin",
             admin._id,
-            `تم انشاء حساب مستخدم باسم ${admin.username}`
+            `طھظ… ط§ظ†ط´ط§ط، ط­ط³ط§ط¨ ظ…ط³طھط®ط¯ظ… ط¨ط§ط³ظ… ${admin.username}`
         );
 
         return sendResponse(res, 'User created successfully',null, 201);
@@ -520,39 +520,188 @@ const forgetPassword = async (req, res) => {
         const admin = await Admin.findOne({email: email});
 
         if (!admin) {
+            return  res.status(404).json({ Access: false });
+        }
+
+        await handleOperationLog(admin._id, 'Update', "admin", admin._id, `تم طلب نسيان كلمة السر`);
+
+        return  res.status(200).json({ Access: true });
+
+    } catch (error) {
+        console.error('Reset password error:', error);
+        return sendResponse(res, null, 'Internal server error', 500);
+    }
+};
+
+const sendOTP = async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) {
+            return sendResponse(res, null, 'Email is required', 400);
+        }
+
+        const admin = await Admin.findOne({ email });
+        if (!admin) {
             return sendResponse(res, null, 'Admin not found', 404);
         }
 
-        const newPassword = Math.random().toString(36).slice(-8);
-        const saltForget = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(newPassword, saltForget);
+        // Formatter for Mecca time (Asia/Riyadh)
+        const formatMecca = (date) =>
+            new Intl.DateTimeFormat('en-GB', {
+                timeZone: 'Asia/Riyadh',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            }).format(date);
 
-        admin.password = hashedPassword;
-        admin.tokenVersion += 1;
-        await admin.save();
+        // Check if there is an active (non-expired, not marked as expired) OTP
+        const existing = await Otp.findOne({ email: admin.email, expiry: false });
+        if (existing) {
+            const now = Date.now();
+            const expMs = new Date(existing.expiryDate).getTime();
 
-        await sendEmail({
-            to: email,
-            subject: `تم إعادة تعيين كلمة المرور - لوحة تحكم القرآني الصغير`,
-            text: `السلام عليكم ورحمة الله وبركاته                           
+            if (expMs > now) {
+                // An active OTP still exists — do NOT create a new one
+                const secondsLeft = Math.ceil((expMs - now) / 1000);
+                return sendResponse(
+                    res,
+                    {
+                        message: 'An active OTP already exists',
+                        expiry: existing.expiryDate.toISOString(),
+                        expiryMecca: formatMecca(new Date(existing.expiryDate)),
+                        secondsLeft
+                    },
+                    null,
+                    200
+                );
+            } else {
+                // OTP expired — mark it as expired before creating a new one
+                try { await Otp.updateOne({ _id: existing._id }, { $set: { expiry: true } }); } catch (_) {}
+            }
+        }
 
-عزيزي المشرف،                                                              
+        // Generate and save a new OTP, retrying if a unique conflict occurs on the `otp` field
+        const generateAndSaveOTP = async (attempt = 0) => {
+            if (attempt >= 5) throw new Error('Failed to generate unique OTP');
 
- تم إعادة تعيين كلمة المرور الخاصة بحسابك في لوحة تحكم القرآني الصغير بنجاح.
+            const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+            const newExpiry = new Date(Date.now() + 2 * 60 * 1000); // 2 minutes
 
-                                         ${newPassword}كلمة المرور الجديدة: 
+            try {
+                const otpDoc = await Otp.findOneAndUpdate(
+                    { email: admin.email },
+                    { otp: otpCode, expiryDate: newExpiry, expiry: false },
+                    { upsert: true, new: true, setDefaultsOnInsert: true }
+                );
+                return {
+                    otp: otpCode,
+                    expiryISO: otpDoc.expiryDate.toISOString(),
+                    expiryDate: otpDoc.expiryDate
+                };
+            } catch (err) {
+                // Handle duplicate key error on the unique `otp` field
+                if (err && err.code === 11000 && err.keyPattern && err.keyPattern.otp) {
+                    return generateAndSaveOTP(attempt + 1);
+                }
+                throw err;
+            }
+        };
 
-                        يمكنك الآن تسجيل الدخول باستخدام كلمة المرور الجديدة.
+        const otpData = await generateAndSaveOTP();
 
-مع أطيب التحيات،                                                           
-فريق القرآني الصغير                                                        
-
-                                                                        ---
-هذه رسالة تلقائية، يُرجى عدم الرد عليها.                                   `,
-            newPassword: newPassword
+        await sendOTPToEmail({
+            to: admin.email,
+            subject: 'OTP Code - Small Qurani Admin Panel',
+            otp: otpData.otp,
+            expiresInMinutes: 2,
+            loginUrl: '#'
         });
 
-        await handleOperationLog(admin._id, 'Update', "admin", admin._id, `تم اعادة تعيين كلمة المرور عشوائية للمستخدم ${admin.username}`);
+        return sendResponse(
+            res,
+            {
+                message: 'OTP sent successfully',
+                expiry: formatMecca(new Date(otpData.expiryDate))
+            },
+            null,
+            200
+        );
+    } catch (error) {
+        console.error('Send OTP error:', error);
+        return sendResponse(res, null, 'Internal server error', 500);
+    }
+};
+
+const resetPasswordWithOTP = async (req, res) => {
+    try {
+        const { email, otp, newPassword } = req.body;
+
+        if (!email) {
+            return sendResponse(res, null, 'Email is required', 400);
+        }
+        if (!otp) {
+            return sendResponse(res, null, 'OTP is required', 400);
+        }
+        if (!newPassword || newPassword.length < 6) {
+            return sendResponse(res, null, 'Password must be at least 6 characters long', 400);
+        }
+
+        const admin = await Admin.findOne({ email });
+        if (!admin) {
+            return sendResponse(res, null, 'Admin not found', 404);
+        }
+
+        // نتحقق من الكود
+        const otpDoc = await Otp.findOne({ email: admin.email, otp: String(otp), expiry: false });
+        if (!otpDoc) {
+            return sendResponse(res, null, 'Invalid OTP', 400);
+        }
+
+        // انتهاء الصلاحية؟
+        if (new Date(otpDoc.expiryDate).getTime() < Date.now()) {
+            // نعلمه منتهي حتى ما ينستخدم مرة ثانية
+            try { await Otp.updateOne({ _id: otpDoc._id }, { $set: { expiry: true } }); } catch (_) {}
+            return sendResponse(res, null, 'OTP has expired', 400);
+        }
+
+        // نحدّث كلمة المرور
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+        admin.password = hashedPassword;
+        admin.tokenVersion = (admin.tokenVersion || 0) + 1;
+        await admin.save();
+
+        // نبطل الكود بعد الاستخدام
+        try {
+            await Otp.updateOne({ _id: otpDoc._id }, { $set: { expiry: true } });
+        } catch (_) {}
+
+        // نرسل إشعار بالإيميل (الدالة الأصلية مالّتك)
+        await sendEmail({
+            to: admin.email,
+            subject: `تم إعادة تعيين كلمة المرور - لوحة تحكم القرآني الصغير`,
+            text: `السلام عليكم ورحمة الله وبركاته
+
+عزيزي المشرف،
+
+تم إعادة تعيين كلمة المرور الخاصة بحسابك في لوحة تحكم القرآني الصغير بنجاح.
+
+كلمة المرور الجديدة: ${newPassword}
+
+يمكنك الآن تسجيل الدخول باستخدام كلمة المرور الجديدة.
+
+مع أطيب التحيات،
+فريق القرآني الصغير
+
+---
+هذه رسالة تلقائية، يُرجى عدم الرد عليها.`,
+            newPassword: newPassword
+        });
 
         return sendResponse(res, { message: 'Password reset successfully' });
     } catch (error) {
@@ -560,6 +709,80 @@ const forgetPassword = async (req, res) => {
         return sendResponse(res, null, 'Internal server error', 500);
     }
 };
+
+const verifyTheAccount = async (req, res) => {
+    try {
+        const { otp } = req.body;
+
+        if (!otp) {
+            return sendResponse(res, null, 'OTP is required', 400);
+        }
+
+        // Find an active (not marked expired) OTP document by code
+        const otpDoc = await Otp.findOne({ otp: String(otp), expiry: false });
+        if (!otpDoc) {
+            return sendResponse(res, null, 'Invalid OTP code', 400);
+        }
+
+        // Check expiration
+        if (new Date(otpDoc.expiryDate).getTime() < Date.now()) {
+            try { await Otp.updateOne({ _id: otpDoc._id }, { $set: { expiry: true } }); } catch (_) {}
+            return sendResponse(res, null, 'OTP has expired', 400);
+        }
+
+        // Find the admin by the email stored in the OTP doc
+        const admin = await Admin.findOne({ email: otpDoc.email });
+        if (!admin) {
+            return sendResponse(res, null, 'Admin not found', 404);
+        }
+
+        // If already verified, just invalidate the OTP and return success info
+        if (admin.verifyEmail === true) {
+            try { await Otp.updateOne({ _id: otpDoc._id }, { $set: { expiry: true } }); } catch (_) {}
+            return sendResponse(
+                res,
+                {
+                    verified: true,
+                    alreadyVerified: true,
+                    verifiedAt: admin.dateVerifyEmail ? admin.dateVerifyEmail.toISOString() : null
+                },
+                'Account is already verified',
+                200
+            );
+        }
+
+        // Mark admin as verified
+        admin.verifyEmail = true;
+        admin.dateVerifyEmail = new Date();
+        await admin.save();
+
+        // Invalidate OTP after successful verification
+        try { await Otp.updateOne({ _id: otpDoc._id }, { $set: { expiry: true } }); } catch (_) {}
+
+        // Send "account activated" email (non-blocking for the response)
+        try {
+            await sendAccountVerifiedEmail({ to: admin.email });
+        } catch (e) {
+            console.error('sendAccountVerifiedEmail error:', e);
+            // do not fail the request because of email issues
+        }
+
+        return sendResponse(
+            res,
+            {
+                verified: true,
+                verifiedAt: admin.dateVerifyEmail.toISOString()
+            },
+            'Account verified successfully',
+            200
+        );
+    } catch (error) {
+        console.error('Verify account error:', error);
+        return sendResponse(res, null, 'Internal server error', 500);
+    }
+};
+
+
 
 
 module.exports = {
@@ -575,5 +798,8 @@ module.exports = {
     resetPassword,
     forgetPassword,
     getAllAdminsForFilter,
-    updateAdminProfile
+    updateAdminProfile,
+    sendOTP,
+    resetPasswordWithOTP,
+    verifyTheAccount
 };
